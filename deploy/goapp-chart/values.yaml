@@ -1,0 +1,18 @@
+microservicename: goapp
+
+deployment:
+  replicas: 3
+  strategies: RollingUpdate
+  nodelabels:
+    app: gocalc
+
+pods:
+  goapp:
+    dockerhubUrl:
+      registry: leiteam
+      repository: goapp
+      tag: latest
+  nginx:
+    mount:
+      configMap: nginx-gocalc-conf
+

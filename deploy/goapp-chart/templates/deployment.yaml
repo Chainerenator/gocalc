@@ -1,0 +1,42 @@
+{{- $microserviceName :=  .Values.microservicename -}}
+{{- $goappReplicas := .Values.deployment.replicas -}}
+{{- $goappStrategyUpdate := .Values.deployment.strategies -}}
+{{- $serviceAccount := .Values.deployment.serviceAccount -}}
+
+---
+
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ $microserviceName }}
+  namespace: {{ include "namespace" . }}
+  labels:
+    app: {{ $microserviceName }}
+spec:
+  replicas: {{ $goappReplicas }}
+  selector:
+    matchLabels:
+      app: {{ $microserviceName }}
+  template:
+    metadata:
+      labels:
+        app: {{ $microserviceName }}
+    spec:
+      serviceAccount: {{ $serviceAccount }}      
+      imagePullSecrets:
+        - name: docker-auth-{{- $microserviceName }}
+      containers:
+        - name: {{ $microserviceName }}
+          image: {{ include  "goappImage" . }}
+          imagePullPolicy: Always
+        - name: nginx
+          image: nginx:alpine
+          volumeMounts:
+            - name: {{ include "goappConf" . }} 
+              mountPath: /etc/nginx/conf.d
+      volumes:
+        - name: {{ include "goappConf" . }} 
+          configMap:
+            name: {{ include "goappConf" . }} 
+
+---

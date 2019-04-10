@@ -1,0 +1,171 @@
+stages:
+- init
+- deploy
+- delete
+
+variables:
+  NS_PROD: ${CI_PROJECT_NAME}-prod
+  NS_DEV: ${CI_PROJECT_NAME}-dev
+  NS_TMP_BRANCHES: ${CI_PROJECT_NAME}-msvc-${MICROSERVICE_NAME}-${BRANCH_NAME}
+
+  CHART_NAME_PROD: ${CI_PROJECT_NAME}-prod
+  CHART_NAME_DEV: ${CI_PROJECT_NAME}-dev
+  CHART_NAME_TMP_BRANCHES: ${CI_PROJECT_NAME}-${BRANCH_NAME}
+
+  URL_TMP: ${CI_PROJECT_NAME}-${BRANCH_NAME}.rebrain.com
+
+init-prod:
+  stage: init
+  image: dtzar/helm-kubectl
+  before_script:
+  - echo "${KUBECTL_AUTH_CONFIG}" > /root/.kube/config
+  script:
+  - kubectl create ns ${NS_PROD} || true
+  - kubectl create serviceaccount ${DEPLOY_SA_NAME} --namespace ${NS_PROD} || true
+  - kubectl create rolebinding tiller-binding
+      --clusterrole=${DEPLOY_CLUSTERROLE_NAME}
+      --serviceaccount=${NS_PROD}:${DEPLOY_SA_NAME}
+      --namespace ${NS_PROD} || true
+  - helm init --service-account ${DEPLOY_SA_NAME} --tiller-namespace ${NS_PROD} || true
+  only:
+    refs:
+    - triggers
+    variables:
+    - $BRANCH_NAME == "prod"
+
+init-dev:
+  stage: init
+  image: dtzar/helm-kubectl
+  before_script:
+  - echo "${KUBECTL_AUTH_CONFIG}" > /root/.kube/config
+  script:
+  - kubectl create ns ${NS_DEV} || true
+  - kubectl create serviceaccount ${DEPLOY_SA_NAME} --namespace ${NS_DEV} || true
+  - kubectl create rolebinding tiller-binding
+      --clusterrole=${DEPLOY_CLUSTERROLE_NAME}
+      --serviceaccount=${NS_DEV}:${DEPLOY_SA_NAME}
+      --namespace ${NS_DEV} || true
+  - helm init --service-account ${DEPLOY_SA_NAME} --tiller-namespace ${NS_DEV} || true
+  only:
+    refs:
+    - triggers
+    variables:
+    - $BRANCH_NAME == "dev"
+
+init-branches:
+  stage: init
+  image: dtzar/helm-kubectl
+  before_script:
+  - echo "${KUBECTL_AUTH_CONFIG}" > /root/.kube/config
+  script:
+  - kubectl create ns ${NS_TMP_BRANCHES} || true
+  - kubectl create serviceaccount ${DEPLOY_SA_NAME} --namespace ${NS_TMP_BRANCHES} || true
+  - kubectl create rolebinding tiller-binding
+      --clusterrole=${DEPLOY_CLUSTERROLE_NAME}
+      --serviceaccount=${NS_TMP_BRANCHES}:${DEPLOY_SA_NAME}
+      --namespace ${NS_TMP_BRANCHES} || true
+  - helm init --service-account ${DEPLOY_SA_NAME} --tiller-namespace ${NS_TMP_BRANCHES} || true
+  only:
+    refs:
+    - triggers
+  except:
+    variables:
+    - $BRANCH_NAME == "prod"
+    - $BRANCH_NAME == "dev"
+    - $NEED_DELETE == "true"
+
+deploy-prod:
+  stage: deploy
+  image: dtzar/helm-kubectl
+  before_script:
+  - echo "${KUBECTL_AUTH_CONFIG}" > /root/.kube/config
+  - mkdir -p $HOME/.docker && echo "${DOCKER_AUTH_CONFIG}" > $HOME/.docker/config.json && chmod 600 $HOME/.docker/config.json
+  script:
+  - helm upgrade ${CHART_NAME_PROD}
+      deploy/goapp-chart
+      --tiller-namespace ${NS_PROD}
+      --namespace ${NS_PROD}
+      --set "pods.goapp.dockerhubUrl.tag=${goapp_IMAGE}"
+      --set "deployment.serviceAccount=${DEPLOY_SA_NAME}"
+      --set "secrets.dockerConfigJson="$(echo "${DOCKER_AUTH_CONFIG}" | base64 -w 1024)""
+      --install
+      --force
+  environment:
+    name: production
+    url: https://${DOMAIN_NAME_PROD}
+  only:
+    refs:
+    - triggers
+    variables:
+    - $BRANCH_NAME == "prod"
+
+deploy-dev:
+  stage: deploy
+  image: dtzar/helm-kubectl
+  before_script:
+  - echo "${KUBECTL_AUTH_CONFIG}" > /root/.kube/config
+  - mkdir -p $HOME/.docker && echo "${DOCKER_AUTH_CONFIG}" > $HOME/.docker/config.json && chmod 600 $HOME/.docker/config.json
+  script:
+   - helm upgrade ${CHART_NAME_DEV}
+      deploy/goapp-chart
+      --tiller-namespace ${NS_DEV}
+      --namespace ${NS_DEV}
+      --set "pods.goapp.dockerhubUrl.tag=${goapp_IMAGE}"
+      --set "deployment.serviceAccount=${DEPLOY_SA_NAME}"
+      --set "secrets.dockerConfigJson="$(echo "${DOCKER_AUTH_CONFIG}" | base64 -w 1024)""
+      --install
+      --force
+  environment:
+    name: development
+    url: https://${DOMAIN_NAME_DEV}
+  only:
+    refs:
+    - triggers
+    variables:
+    - $BRANCH_NAME == "dev"
+
+deploy-branches:
+  stage: deploy
+  image: dtzar/helm-kubectl
+  before_script:
+  - echo "${KUBECTL_AUTH_CONFIG}" > /root/.kube/config
+  - mkdir -p $HOME/.docker && echo "${DOCKER_AUTH_CONFIG}" > $HOME/.docker/config.json && chmod 600 $HOME/.docker/config.json
+  script:
+  - helm upgrade ${CHART_NAME_TMP_BRANCHES}
+      deploy/goapp-chart
+      --tiller-namespace ${NS_TMP_BRANCHES}
+      --namespace ${NS_TMP_BRANCHES}
+      --set "pods.goapp.dockerhubUrl.tag=${goapp_IMAGE}"
+      --set "deployment.serviceAccount=${DEPLOY_SA_NAME}"
+      --set "secrets.dockerConfigJson="$(echo "${DOCKER_AUTH_CONFIG}" | base64 -w 1024)""
+      --install
+      --force
+  environment:
+    name: ${BRANCH_NAME}
+    url: https://${URL_TMP}
+  only:
+    refs:
+    - triggers
+  except:
+    variables:
+    - $BRANCH_NAME == "prod"
+    - $BRANCH_NAME == "dev"
+    - $NEED_DELETE == "true"
+
+delete-branches:
+  stage: delete
+  image: dtzar/helm-kubectl
+  before_script:
+  - echo "${KUBECTL_AUTH_CONFIG}" > /root/.kube/config
+  script:
+  - kubectl delete ns ${NS_TMP_BRANCHES} || true
+  only:
+    refs:
+    - triggers
+  except:
+    variables:
+    - $BRANCH_NAME == "prod"
+    - $BRANCH_NAME == "dev"
+    - $NEED_DELETE == "false"
+  when: manual
+
