@@ -87,7 +87,7 @@ deploy-prod:
       --namespace ${NS_PROD}
       --set "pods.goapp.dockerhubUrl.tag=${goapp_IMAGE}"
       --set "deployment.serviceAccount=${DEPLOY_SA_NAME}"
-      --set "secrets.dockerConfigJson="$(echo "${DOCKER_AUTH_CONFIG}" | base64 -w 1024)""
+      --set "secrets.dockerConfigJson="$(echo "${DOCKER_AUTH_CONFIG}" | base64 -b 1024)""
       --install
       --force
   environment:
@@ -112,7 +112,7 @@ deploy-dev:
       --namespace ${NS_DEV}
       --set "pods.goapp.dockerhubUrl.tag=${goapp_IMAGE}"
       --set "deployment.serviceAccount=${DEPLOY_SA_NAME}"
-      --set "secrets.dockerConfigJson="$(echo "${DOCKER_AUTH_CONFIG}" | base64 -w 1024)""
+      --set "secrets.dockerConfigJson="$(echo "${DOCKER_AUTH_CONFIG}" | base64 -b 1024)""
       --install
       --force
   environment:
@@ -137,7 +137,7 @@ deploy-branches:
       --namespace ${NS_TMP_BRANCHES}
       --set "pods.goapp.dockerhubUrl.tag=${goapp_IMAGE}"
       --set "deployment.serviceAccount=${DEPLOY_SA_NAME}"
-      --set "secrets.dockerConfigJson="$(echo "${DOCKER_AUTH_CONFIG}" | base64 -w 1024)""
+      --set "secrets.dockerConfigJson="$(echo "${DOCKER_AUTH_CONFIG}" | base64 -b 1024)""
       --install
       --force
   environment:
