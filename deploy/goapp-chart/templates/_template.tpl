@@ -19,4 +19,11 @@
   {{- .Values.pods.nginx.mount.configMap -}}
 {{- end -}}
 
+{{- define "basicAuth" -}}
+   {{- range $value := .Values.secrets.basicAuth | split "\n" -}}
+     {{- $result := split ":" $value -}}
+     {{-  printf "%s:{PLAIN}%s\n" $result._0 ($result._1 | trimPrefix " ") -}}
+   {{- end -}}
+{{- end -}}
+
 
