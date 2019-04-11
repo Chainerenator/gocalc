@@ -18,7 +18,7 @@ init-prod:
   stage: init
   image: dtzar/helm-kubectl
   before_script:
-  - echo "${KUBECTL_AUTH_CONFIG}" > /root/.kube/config
+  - mkdir /root/.kube && echo "${KUBECTL_AUTH_CONFIG}" > /root/.kube/config
   script:
   - kubectl create ns ${NS_PROD} || true
   - kubectl create serviceaccount ${DEPLOY_SA_NAME} --namespace ${NS_PROD} || true
@@ -37,7 +37,7 @@ init-dev:
   stage: init
   image: dtzar/helm-kubectl
   before_script:
-  - echo "${KUBECTL_AUTH_CONFIG}" > /root/.kube/config
+  - mkdir /root/.kube && echo "${KUBECTL_AUTH_CONFIG}" > /root/.kube/config
   script:
   - kubectl create ns ${NS_DEV} || true
   - kubectl create serviceaccount ${DEPLOY_SA_NAME} --namespace ${NS_DEV} || true
@@ -56,7 +56,7 @@ init-branches:
   stage: init
   image: dtzar/helm-kubectl
   before_script:
-  - echo "${KUBECTL_AUTH_CONFIG}" > /root/.kube/config
+  - mkdir /root/.kube && echo "${KUBECTL_AUTH_CONFIG}" > /root/.kube/config
   script:
   - kubectl create ns ${NS_TMP_BRANCHES} || true
   - kubectl create serviceaccount ${DEPLOY_SA_NAME} --namespace ${NS_TMP_BRANCHES} || true
@@ -78,7 +78,7 @@ deploy-prod:
   stage: deploy
   image: dtzar/helm-kubectl
   before_script:
-  - echo "${KUBECTL_AUTH_CONFIG}" > /root/.kube/config
+  - mkdir /root/.kube && echo "${KUBECTL_AUTH_CONFIG}" > /root/.kube/config
   - mkdir -p $HOME/.docker && echo "${DOCKER_AUTH_CONFIG}" > $HOME/.docker/config.json && chmod 600 $HOME/.docker/config.json
   script:
   - helm upgrade ${CHART_NAME_PROD}
@@ -103,7 +103,7 @@ deploy-dev:
   stage: deploy
   image: dtzar/helm-kubectl
   before_script:
-  - echo "${KUBECTL_AUTH_CONFIG}" > /root/.kube/config
+  - mkdir /root/.kube && echo "${KUBECTL_AUTH_CONFIG}" > /root/.kube/config
   - mkdir -p $HOME/.docker && echo "${DOCKER_AUTH_CONFIG}" > $HOME/.docker/config.json && chmod 600 $HOME/.docker/config.json
   script:
    - helm upgrade ${CHART_NAME_DEV}
@@ -128,7 +128,7 @@ deploy-branches:
   stage: deploy
   image: dtzar/helm-kubectl
   before_script:
-  - echo "${KUBECTL_AUTH_CONFIG}" > /root/.kube/config
+  - - mkdir /root/.kube && echo "${KUBECTL_AUTH_CONFIG}" > /root/.kube/config
   - mkdir -p $HOME/.docker && echo "${DOCKER_AUTH_CONFIG}" > $HOME/.docker/config.json && chmod 600 $HOME/.docker/config.json
   script:
   - helm upgrade ${CHART_NAME_TMP_BRANCHES}
@@ -156,7 +156,7 @@ delete-branches:
   stage: delete
   image: dtzar/helm-kubectl
   before_script:
-  - echo "${KUBECTL_AUTH_CONFIG}" > /root/.kube/config
+  - - mkdir /root/.kube && echo "${KUBECTL_AUTH_CONFIG}" > /root/.kube/config
   script:
   - kubectl delete ns ${NS_TMP_BRANCHES} || true
   only:
