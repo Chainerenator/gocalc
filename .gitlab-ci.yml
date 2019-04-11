@@ -128,7 +128,7 @@ deploy-branches:
   stage: deploy
   image: dtzar/helm-kubectl
   before_script:
-  - - mkdir /root/.kube && echo "${KUBECTL_AUTH_CONFIG}" > /root/.kube/config
+  - mkdir /root/.kube && echo "${KUBECTL_AUTH_CONFIG}" > /root/.kube/config
   - mkdir -p $HOME/.docker && echo "${DOCKER_AUTH_CONFIG}" > $HOME/.docker/config.json && chmod 600 $HOME/.docker/config.json
   script:
   - helm upgrade ${CHART_NAME_TMP_BRANCHES}
@@ -156,7 +156,7 @@ delete-branches:
   stage: delete
   image: dtzar/helm-kubectl
   before_script:
-  - - mkdir /root/.kube && echo "${KUBECTL_AUTH_CONFIG}" > /root/.kube/config
+  - mkdir /root/.kube && echo "${KUBECTL_AUTH_CONFIG}" > /root/.kube/config
   script:
   - kubectl delete ns ${NS_TMP_BRANCHES} || true
   only:
