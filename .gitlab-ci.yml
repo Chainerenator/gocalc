@@ -88,7 +88,6 @@ deploy-prod:
       --namespace ${NS_PROD}
       --set "pods.goapp.dockerhubUrl.tag=${goapp_IMAGE}"
       --set "deployment.serviceAccount=${DEPLOY_SA_NAME}"
-      --set "secrets.dockerConfigJson="$(echo "${DOCKER_AUTH_CONFIG}" | base64 -w 1024)""
       --install
       --force
   environment:
@@ -102,10 +101,11 @@ deploy-prod:
 
 deploy-dev:
   stage: deploy
-  image: dtzar/helm-kubectl
+  image: google/cloud-sdk:latest
   before_script:
   - mkdir /root/.kube && echo "${KUBECTL_AUTH_CONFIG}" > /root/.kube/config
   - mkdir -p $HOME/.docker && echo "${DOCKER_AUTH_CONFIG}" > $HOME/.docker/config.json && chmod 600 $HOME/.docker/config.json
+  - curl https://raw.githubusercontent.com/helm/helm/master/scripts/get | bash
   script:
    - helm upgrade ${CHART_NAME_DEV}
       deploy/goapp-chart
@@ -113,7 +113,6 @@ deploy-dev:
       --namespace ${NS_DEV}
       --set "pods.goapp.dockerhubUrl.tag=${goapp_IMAGE}"
       --set "deployment.serviceAccount=${DEPLOY_SA_NAME}"
-      --set "secrets.dockerConfigJson="$(echo "${DOCKER_AUTH_CONFIG}" | base64 -d 1024)""
       --install
       --force
   environment:
@@ -127,10 +126,11 @@ deploy-dev:
 
 deploy-branches:
   stage: deploy
-  image: dtzar/helm-kubectl
+  image: google/cloud-sdk:latest
   before_script:
   - mkdir /root/.kube && echo "${KUBECTL_AUTH_CONFIG}" > /root/.kube/config
   - mkdir -p $HOME/.docker && echo "${DOCKER_AUTH_CONFIG}" > $HOME/.docker/config.json && chmod 600 $HOME/.docker/config.json
+  - curl https://raw.githubusercontent.com/helm/helm/master/scripts/get | bash
   script:
   - helm upgrade ${CHART_NAME_TMP_BRANCHES}
       deploy/goapp-chart
@@ -138,7 +138,6 @@ deploy-branches:
       --namespace ${NS_TMP_BRANCHES}
       --set "pods.goapp.dockerhubUrl.tag=${goapp_IMAGE}"
       --set "deployment.serviceAccount=${DEPLOY_SA_NAME}"
-      --set "secrets.dockerConfigJson="$(echo "${DOCKER_AUTH_CONFIG}" | base64 -d 1024)""
       --install
       --force
   environment:
