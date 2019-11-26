@@ -130,7 +130,7 @@ deploy-branches:
   before_script:
   - mkdir /root/.kube && echo "${KUBECTL_AUTH_CONFIG}" > /root/.kube/config
   - mkdir -p $HOME/.docker && echo "${DOCKER_AUTH_CONFIG}" > $HOME/.docker/config.json && chmod 600 $HOME/.docker/config.json
-  - curl https://raw.githubusercontent.com/helm/helm/release-2.13/scripts/get | bash
+  - curl https://raw.githubusercontent.com/helm/helm/release-2.14/scripts/get | bash
   script:
   - helm upgrade ${CHART_NAME_TMP_BRANCHES}
       deploy/goapp-chart
@@ -157,6 +157,8 @@ delete-branches:
   image: dtzar/helm-kubectl
   before_script:
   - mkdir /root/.kube && echo "${KUBECTL_AUTH_CONFIG}" > /root/.kube/config
+  - mkdir -p $HOME/.docker && echo "${DOCKER_AUTH_CONFIG}" > $HOME/.docker/config.json && chmod 600 $HOME/.docker/config.json
+  - curl https://raw.githubusercontent.com/helm/helm/release-2.14/scripts/get | bash
   script:
   - kubectl delete ns ${NS_TMP_BRANCHES} || true
   only:
