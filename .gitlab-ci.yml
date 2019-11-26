@@ -16,7 +16,7 @@ variables:
 
 init-prod:
   stage: init
-  image: dtzar/helm-kubectl
+  image: dtzar/helm-kubectl:2.12.3
   before_script:
   - mkdir /root/.kube && echo "${KUBECTL_AUTH_CONFIG}" > /root/.kube/config
   script:
@@ -35,7 +35,7 @@ init-prod:
 
 init-dev:
   stage: init
-  image: dtzar/helm-kubectl
+  image: dtzar/helm-kubectl:2.12.3
   before_script:
   - mkdir /root/.kube && echo "${KUBECTL_AUTH_CONFIG}" > /root/.kube/config
   script:
@@ -54,7 +54,7 @@ init-dev:
 
 init-branches:
   stage: init
-  image: dtzar/helm-kubectl
+  image: dtzar/helm-kubectl:2.12.3
   before_script:
   - mkdir /root/.kube && echo "${KUBECTL_AUTH_CONFIG}" > /root/.kube/config
   script:
@@ -76,11 +76,10 @@ init-branches:
 
 deploy-prod:
   stage: deploy
-  image: google/cloud-sdk:latest
+  image: dtzar/helm-kubectl:2.12.3
   before_script:
   - mkdir /root/.kube && echo "${KUBECTL_AUTH_CONFIG}" > /root/.kube/config
   - mkdir -p $HOME/.docker && echo "${DOCKER_AUTH_CONFIG}" > $HOME/.docker/config.json && chmod 600 $HOME/.docker/config.json
-  - curl https://raw.githubusercontent.com/helm/helm/release-2.13/scripts/get | bash
   script:
   - helm upgrade ${CHART_NAME_PROD}
       deploy/goapp-chart
@@ -101,11 +100,10 @@ deploy-prod:
 
 deploy-dev:
   stage: deploy
-  image: google/cloud-sdk:latest
+  image: dtzar/helm-kubectl:2.12.3
   before_script:
   - mkdir /root/.kube && echo "${KUBECTL_AUTH_CONFIG}" > /root/.kube/config
   - mkdir -p $HOME/.docker && echo "${DOCKER_AUTH_CONFIG}" > $HOME/.docker/config.json && chmod 600 $HOME/.docker/config.json
-  - curl https://raw.githubusercontent.com/helm/helm/release-2.13/scripts/get | bash
   script:
    - helm upgrade ${CHART_NAME_DEV}
       deploy/goapp-chart
@@ -126,11 +124,10 @@ deploy-dev:
 
 deploy-branches:
   stage: deploy
-  image: google/cloud-sdk:latest
+  image: dtzar/helm-kubectl:2.12.3
   before_script:
   - mkdir /root/.kube && echo "${KUBECTL_AUTH_CONFIG}" > /root/.kube/config
   - mkdir -p $HOME/.docker && echo "${DOCKER_AUTH_CONFIG}" > $HOME/.docker/config.json && chmod 600 $HOME/.docker/config.json
-  - curl https://raw.githubusercontent.com/helm/helm/release-2.14/scripts/get | bash
   script:
   - helm upgrade ${CHART_NAME_TMP_BRANCHES}
       deploy/goapp-chart
@@ -154,11 +151,10 @@ deploy-branches:
 
 delete-branches:
   stage: delete
-  image: dtzar/helm-kubectl
+  image: dtzar/helm-kubectl:2.12.3
   before_script:
   - mkdir /root/.kube && echo "${KUBECTL_AUTH_CONFIG}" > /root/.kube/config
   - mkdir -p $HOME/.docker && echo "${DOCKER_AUTH_CONFIG}" > $HOME/.docker/config.json && chmod 600 $HOME/.docker/config.json
-  - curl https://raw.githubusercontent.com/helm/helm/release-2.14/scripts/get | bash
   script:
   - kubectl delete ns ${NS_TMP_BRANCHES} || true
   only:
